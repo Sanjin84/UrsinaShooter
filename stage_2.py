@@ -23,11 +23,12 @@ counter = 0
 bullets = []
 enemies = []
 loaded = False
+kill_count=0
 
 def update():
-    global counter, bullets, enemies,loaded
+    global counter, bullets, enemies,loaded,kill_count
     counter += 1
-    
+
 #enemy CREATION
     if counter % 300 == 0:
         loaded = True
@@ -50,6 +51,7 @@ def update():
         
         if b_hit_info.hit:
             if b_hit_info.entity in enemies or b_hit_info.entity == wall:
+                
                 b_hit_info.entity.health -= 1
             elif b_hit_info.entity in bullets:
                 pass
@@ -73,19 +75,29 @@ def update():
             enemy.rotation_y +=1
             enemy.rotation_z +=1
         if enemy.health < 0:
+            Animation('assets/explosion', position=enemy.position,
+                scale=5, fps=15,loop=False, autoplay=True,rotation_x = player.rotation_x,rotation_y = player.rotation_y,
+                    rotation_z = player.rotation_z,)
+
             enemies.remove(enemy)
             destroy(enemy)
-          
+            kill_count+=1
+            killdown(kill_count)
+            
           
 #FREEZE AND EXIT WHEN YOU PRESS C            
     if held_keys['c']:
         application.pause()
         mouse.locked = False
+        Text(text = 'Kill Count: '+str(kill_count), scale=2, origin=(0,0), background=True, color=color.blue)
         
     if held_keys['e']:
         player.y += 0.5
 
-
+def killdown(kill_count):
+    count = Text(text = 'Kill Count: '+str(kill_count), origin=(4,-10),color=color.white)
+    count.fade_out(0,0.5)
+    
 #WHAT HAPPENDS WHEN YOU CLICK MOUSE LEFT
 def input(key):
     global bullets, loaded
