@@ -5,8 +5,14 @@ from random import *
 
 app = Ursina()
 
+
+
 #create a player
 player = FirstPersonController(model = 'cube', collider = 'box', jump_height = 10, gravity = 0.1, speed = 10, health = 100)
+
+rifle_gun = Entity(parent=camera, model='cube', color=color.gray, origin_y=-0.5, scale= (0.5,0.5,2), position=(0,-1,2), collider='box')
+shot_gun = Entity(parent=camera, model='cube', color=color.gray, origin_y=-0.5, scale= (1,0.2,2), position=(0,-1,2), collider='box',visible=False)
+        
 #player.cursor.scale = 0.1
 #create a floor and 2 walls
 floor = Entity(collider = 'box',
@@ -96,13 +102,25 @@ def update():
 
 def killdown(kill_count):
     count = Text(text = 'Kill Count: '+str(kill_count), origin=(4,-10),color=color.white)
-    count.fade_out(0,0.5)
+    count.fade_out(0,2)
     
 #WHAT HAPPENDS WHEN YOU CLICK MOUSE LEFT
 def input(key):
     global bullets, loaded
+
+    if key == '1':
+        shot_gun.visible=False
+        rifle_gun.visible = True
+        player.rifle = rifle_gun
+    if key == '2':
+        rifle_gun.visible = False
+        shot_gun.visible=True
+        
+
+
     if key == 'left mouse down':
-        bullet = Entity(model = 'cube',
+        bullet = Entity(
+                    model = 'cube',
                     collider = 'box',
                     scale = (0.1,0.1,0.1),
                     color = color.green,
@@ -115,10 +133,13 @@ def input(key):
                     speed = 25)
         bullets.append(bullet)
         
-        
-    if key == 'right mouse down' and loaded:
+
+   
+
+    if key == 'right mouse down' and loaded and shot_gun.visible==True:
         for i in range(0,20):
-            bullet = Entity(model = 'cube',
+            bullet = Entity(
+                        model = 'cube',
                         collider = 'box',
                         scale = (0.1,0.1,0.1),
                         color = color.green,
