@@ -76,7 +76,7 @@ def update():
             enemy.rotation_z +=1
         if enemy.health < 0:
             Animation('assets/explosion', position=enemy.position,
-                scale=5, fps=15,loop=False, autoplay=True,rotation_x = player.rotation_x,rotation_y = player.rotation_y,
+                scale=enemy.size*3, fps=15,loop=False, autoplay=True,rotation_x = player.rotation_x,rotation_y = player.rotation_y,
                     rotation_z = player.rotation_z,)
 
             enemies.remove(enemy)
@@ -95,8 +95,11 @@ def update():
         player.y += 0.5
 
 def killdown(kill_count):
-    count = Text(text = 'Kill Count: '+str(kill_count), origin=(4,-10),color=color.white)
-    count.fade_out(0,0.5)
+    if len(str(kill_count)) == 1: counter = 'Kill Count: '+ '00' + str(kill_count)
+    if len(str(kill_count)) == 2: counter = 'Kill Count: '+ '0' + str(kill_count)
+    if len(str(kill_count)) == 3: counter = 'Kill Count: ' + str(kill_count)
+    count = Text(text = counter, origin=(4.65,-18.3),color=color.white, background=True)
+    count.fade_out(0,2.5)
     
 #WHAT HAPPENDS WHEN YOU CLICK MOUSE LEFT
 def input(key):
