@@ -10,8 +10,8 @@ app = Ursina()
 #create a player
 player = FirstPersonController(model = 'cube', collider = 'box', jump_height = 10, gravity = 0.1, speed = 10, health = 100)
 
-rifle_gun = Entity(parent=camera, model='cube', color=color.gray, origin_y=-0.5, scale= (0.5,0.5,2), position=(0,-1,2), collider='box')
-shot_gun = Entity(parent=camera, model='cube', color=color.gray, origin_y=-0.5, scale= (1,0.2,2), position=(0,-1,2), collider='box',visible=False)
+rifle_gun = Entity(parent=camera, model='sphere', color=color.black, origin_y=-0.5, scale= (0.2,0.5,2.5), position=(0,-1,2), collider='box')
+shot_gun = Entity(parent=camera, model='cube', color=color.black, origin_y=-1, scale= (0.4,0.2,2), position=(0,-1,2), collider='box',visible=False)
         
 #player.cursor.scale = 0.1
 #create a floor and 2 walls
@@ -101,32 +101,19 @@ def update():
         player.y += 0.5
 
 def killdown(kill_count):
-<<<<<<< HEAD
     if len(str(kill_count)) == 1: counter = 'Kill Count: '+ '00' + str(kill_count)
     if len(str(kill_count)) == 2: counter = 'Kill Count: '+ '0' + str(kill_count)
     if len(str(kill_count)) == 3: counter = 'Kill Count: ' + str(kill_count)
     count = Text(text = counter, origin=(4.65,-18.3),color=color.white, background=True)
     count.fade_out(0,2.5)
-=======
-    count = Text(text = 'Kill Count: '+str(kill_count), origin=(4,-10),color=color.white)
-    count.fade_out(0,2)
->>>>>>> 414d0a9a6b4f63eb57efa4c2d434cfdf369c0d97
     
 #WHAT HAPPENDS WHEN YOU CLICK MOUSE LEFT
 def input(key):
     global bullets, loaded
 
-    if key == '1':
-        shot_gun.visible=False
-        rifle_gun.visible = True
-        player.rifle = rifle_gun
-    if key == '2':
-        rifle_gun.visible = False
-        shot_gun.visible=True
-        
-
-
     if key == 'left mouse down':
+        shot_gun.visible = False
+        rifle_gun.visible = True
         bullet = Entity(
                     model = 'cube',
                     collider = 'box',
@@ -144,7 +131,9 @@ def input(key):
 
    
 
-    if key == 'right mouse down' and loaded and shot_gun.visible==True:
+    if key == 'right mouse down' and loaded:
+        shot_gun.visible=True
+        rifle_gun.visible = False
         for i in range(0,20):
             bullet = Entity(
                         model = 'cube',
