@@ -8,11 +8,7 @@ app = Ursina()
 
 
 #create a player
-player = FirstPersonController(model = 'cube', collider = 'box', jump_height = 10, gravity = 0.1, speed = 10, health = 100)
-
-rifle_gun = Entity(parent=camera, model='cube', color=color.gray, origin_y=-0.5, scale= (0.5,0.5,2), position=(0,-1,2), collider='box')
-shot_gun = Entity(parent=camera, model='cube', color=color.gray, origin_y=-0.5, scale= (1,0.2,2), position=(0,-1,2), collider='box',visible=False)
-      
+player = FirstPersonController(model = 'cube', collider = 'box', jump_height = 10, gravity = 0.1, speed = 10, health = 100, height = 5)  
 
 #player.cursor.scale = 0.1
 #create a floor and 2 walls
@@ -23,38 +19,56 @@ floor = Entity(collider = 'box',
                texture_scale = (100,100),
                color = color.white.tint(-0.1),
                health = 10000000)
+
+bot = Entity(model = 'cube',
+    collider = 'box',
+    scale = (2,4,2),
+    color = color.yellow,
+    position = (randint(1,20) ,1, randint(-50,50)),
+    texture = 'white_cube',
+    health = 2,
+    visible = False)
+e_gun = Entity(parent=bot, model='cube', color=color.gray, scale= (0.5,0.1,4), position=(0.3,0.0,-0.5), collider='box') 
+
 wall = Entity(collider = 'box', model = 'cube',scale = (2,100,100),position = (50,0,0), texture = 'sky_sunset', health = 10000000)
 wall2 = Entity(collider = 'box', model = 'cube',scale = (2,100,100),position = (-50,0,0), texture = 'sky_default', health = 100)
 
-BOT = Entity(model = 'cube',
-                collider = 'box',
-                scale = (2,4,2),
-                color = color.yellow,
-                position = (randint(1,20) ,1, randint(-50,50)),
-                texture = 'white_cube',
-                health = 2)
-e_gun = Entity(parent=BOT, model='cube', color=color.gray, scale= (0.5,0.1,2), position=(0.3,0.3,-0.5), collider='box') 
-
-
-
 counter = 0
 bullets = []
-e_bullets=[]
 enemies = []
 loaded = False
 kill_count=0
 
 
-
+bot_exists = False
 
 def update():
-    global counter, bullets, enemies,loaded,kill_count
+    global counter, bullets, enemies,loaded, kill_count, bot_exists
     counter += 1
 
 #BOT CREATION
-    BOT.rotation_x = player.rotation_x
-    BOT.rotation_y = player.rotation_y
-    BOT.rotation_z = player.rotation_z   
+    if player.health < 0:
+        application.pause()
+        mouse.locked = False
+        Text(text = 'GAME OVER,KILL COUNT: '+str(kill_count), scale=2, origin=(0,0), background=True, color=color.blue)
+
+    if counter == 1000:
+        print('BOT CREATED')
+        bot_exists = True
+        bot.visible = True
+    if bot_exists: 
+        bot.look_at(player)
+    if counter > 1000 and counter % 60==0:
+        bot_bullet = Entity(model = 'cube',
+                            collider = 'box',
+                            scale = (0.3,0.3,0.3),
+                            color = color.red,
+                            rotation_y = bot.rotation_y,
+                            position = bot.position + (0,-1,0),
+                            speed = 5,
+                            id = 'bot')  
+        bot_bullet.look_at(player)                
+        bullets.append(bot_bullet)
     
 #enemy CREATION
     if counter % 300 == 0:
@@ -64,10 +78,11 @@ def update():
                 d_rot_y = 0,
                 size = randint(1,5),
                 color = color.yellow,
-                position = (50 ,randint(1,20), randint(-50,50)),
+                position = (50 ,randint(10,30), randint(-50,50)),
                 texture = 'reflection_map_3')
         enemy.scale = (enemy.size,enemy.size,enemy.size)
         enemy.dx = -0.2/enemy.size
+        enemy.dy = (0.2/enemy.size)*uniform(-0.1,0.1)
         enemy.health = enemy.size*2 + 1
         enemies.append(enemy)
 
@@ -77,33 +92,24 @@ def update():
         b.position += b.forward*b.speed
         
         if b_hit_info.hit:
-            if b_hit_info.entity in enemies or b_hit_info.entity == wall or b_hit_info.entity == BOT:
-                
+            if b_hit_info.entity in enemies or b_hit_info.entity == wall:
                 b_hit_info.entity.health -= 1
-            elif b_hit_info.entity in bullets:
-                pass
-            else:
+        if b_hit_info.entity == player and b.id =='bot':
+            player.health -= 2
+            m = Text(text = 'HIT, HEALTH: '+str(player.health), scale=2, origin=(0,0), color=color.red)
+            m.fade_out(0,1)
+            if b in bullets:
                 bullets.remove(b)
-                destroy(b, delay = 0.1)
-        if b.x > 100 or b.x <-100 or b.z>100 or b.z<-100 or b.y >100 or b.y<-100:
+            destroy(b)
+        elif b.x > 100 or b.x <-100 or b.z>100 or b.z<-100 or b.y >100 or b.y<-100:
             if b in bullets:
                 bullets.remove(b)
             destroy(b, delay = 0.1)
 
-    for e in e_bullets:
-        e_hit_info = e.intersects()
-        e.position += e.back*e.speed
-        if e_hit_info.hit:
-            if e_hit_info.entity == player:
-                print("hit")
-                application.pause
-          
-        #destroy(e, delay = 2)
-        
-
 #enemy MOVEMENT AND BULLET COLLISION
     for enemy in enemies:
         enemy.x += enemy.dx
+        enemy.y += enemy.dy
         if enemy.health <= 2:
             enemy.color =  color.yellow.tint(-0.5)
             enemy.dx = 0
@@ -134,38 +140,10 @@ def killdown(kill_count):
     count = Text(text = 'Kill Count: '+str(kill_count), origin=(4,-10),color=color.white)
     count.fade_out(0,2)
 
-def shoot():
-    e_bullet = Entity(
-                        model = 'cube',
-                        collider = 'box',
-                        scale = (0.1,0.1,0.1),
-                        color = color.red,
-                        rotation_x = BOT.rotation_x,
-                        rotation_y = BOT.rotation_y,
-                        rotation_z = BOT.rotation_z,
-                        x = BOT.x,
-                        y = BOT.y+0.1,
-                        z = BOT.z,
-                        speed = 0.5)
-    e_bullets.append(e_bullet)
-    seq = invoke(shoot, delay=0.5)
-    if mouse.locked == False:
-        seq.kill()
-
-shoot()
 
 #WHAT HAPPENDS WHEN YOU CLICK MOUSE LEFT
 def input(key):
     global bullets, loaded
-
-    if key == '1':
-        shot_gun.visible=False
-        rifle_gun.visible = True
-        player.rifle = rifle_gun
-    if key == '2':
-        rifle_gun.visible = False
-        shot_gun.visible=True 
-        
 
     if key == 'left mouse down':
         bullet = Entity(
@@ -182,10 +160,7 @@ def input(key):
                     speed = 25)
         bullets.append(bullet)
         
-       
-   
-
-    if key == 'right mouse down' and loaded and shot_gun.visible==True:
+    if key == 'right mouse down' and loaded:
         for i in range(0,20):
             bullet = Entity(
                         model = 'cube',
@@ -198,14 +173,12 @@ def input(key):
                         x = player.x ,
                         y = player.y+ 1.9,
                         z = player.z,
-                        speed =10)
+                        speed =10,
+                        id = 'player')
             bullets.append(bullet)
         loaded = False
-
-
 
 sky = Sky()         
 app.run()
 
 #HAppy day
-

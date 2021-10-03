@@ -131,6 +131,7 @@ def input(key):
 
 sky = Sky()
 sky.texture = 'sky_sunset'
+sky.color = color.cyan
 
 
 app.run()
